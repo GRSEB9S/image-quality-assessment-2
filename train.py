@@ -32,6 +32,6 @@ dataset = dataset.repeat(EPOCHS)
 dataset = dataset.batch(BATCHES)
 
 itere = dataset.make_one_shot_iterator()
-print(itere.get_next())
-
-model.build(itere.get_next())
+ele = itere.get_next()
+print(ele)
+model.build(ele[0], ele[1])

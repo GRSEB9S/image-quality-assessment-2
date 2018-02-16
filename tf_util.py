@@ -51,13 +51,6 @@ def argmax(x, axis=None):
     return tf.argmax(x, axis=axis)
 
 
-def repeat(x, length):
-    x = tf.reshape(x, [-1, 1])
-    x = tf.tile(x, [1, length])
-    x = tf.reshape(x, [-1])
-    return x
-
-
 def switch(condition, then_expression, else_expression):
     """Switches between two operations depending on a scalar value (int or bool).
     Note that both `then_expression` and `else_expression`
@@ -92,6 +85,8 @@ def lrelu(x, leak=0.2):
     f2 = 0.5 * (1 - leak)
     return f1 * x + f2 * abs(x)
 
+def swish(x, b=1.0):
+    return x * tf.nn.sigmoid(b * x)
 
 def categorical_sample_logits(X):
     # https://github.com/tensorflow/tensorflow/issues/456
@@ -328,7 +323,11 @@ def conv2d(x, num_filters, name, filter_size=(3, 3), stride=(1, 1), pad="SAME", 
         return tf.nn.conv2d(x, w, stride_shape, pad) + b
 
 
-def dense(x, size, name, weight_init=None, bias=True):
+def maxpool(x, size = 2):
+    return tf.nn.max_pool(x, ksize=[1,size,size,1], strides=[1,size,size,1],padding='SAME')
+
+
+def dense(x, size, name, weight_init=normc_initializer(0.1), bias=True):
     w = tf.get_variable(name + "/w", [x.get_shape()[1], size], initializer=weight_init)
     ret = tf.matmul(x, w)
     if bias:
