@@ -22,7 +22,7 @@ def _parse_function(filename, label):
     image_expand_dims = tf.reshape(image_ran_ud, shape=[1, -1])
     return image_ran_ud, label
 
-model = Model('weighted')
+model = Model(BATCHES, 'weighted')
 
 dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
 dataset = dataset.prefetch(100)

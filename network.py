@@ -3,10 +3,12 @@ import tensorflow as tf
 import tf_util as U
 
 class Model:
-    def __init__(self, loss = "weighted"):
+    def __init__(self, BATCHES, loss = "weighted"):
         self.loss = loss
         self.prob = tf.placeholder(shape=(), dtype=tf.float32)
         self.lr = tf.placeholder(shape=(), dtype=tf.float32)
+        self.n_images = BATCHES
+        self.n_patches = self.n_images * 64
     
     def block(self, net, filters):
         with tf.variable_scope('block_'+str(filters)):
@@ -18,8 +20,6 @@ class Model:
         return net
 
     def build(self, image, mos_score):
-        self.n_images  = tf.shape(mos_score)[0]
-        self.n_patches = tf.shape(image)[0]
         net = self.block(image, 32)
         net = self.block(net, 64)
         net = self.block(net, 128)
@@ -46,7 +46,7 @@ class Model:
             net2 = tf.nn.relu(net2) + 1e-6
             self.loss_op = self.weighted_loss(net1, net2, mos_score)
 
-        optimizer = tf.train.AdamOptimizer(lr)
+        optimizer = tf.train.AdamOptimizer(self.lr)
         self.train_op = optimizer.minimize(self.loss_op)
 
         
@@ -57,7 +57,7 @@ class Model:
 
     def weighted_loss(self, h, a, t):
         loss = 0
-        
+        self.output = 0        
         h = tf.split(h, self.n_images, 0)
         a = tf.split(a, self.n_images, 0)
         t = tf.split(t, self.n_images, 0)
