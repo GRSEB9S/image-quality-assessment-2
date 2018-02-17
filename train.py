@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+import math
 import logger
 from network import Model
 
@@ -9,12 +9,9 @@ labels = tf.constant([1], dtype = tf.float32)
 val_filenames = tf.constant(["test_images/lena.jpg"], dtype = tf.string)
 val_labels = tf.constant([1], dtype = tf.float32)
 
-filenames = tf.tile(filenames, [10])
-labels = tf.tile(labels, [10])
-
-MIN_VAL = 999
+MIN_VAL = math.inf
 EPOCHS = 100
-BATCHES = 5
+BATCHES = 1
 NO_OF_ITERS = int(filenames.get_shape()[0]) // BATCHES
 
 logger.configure('/tmp')
