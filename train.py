@@ -1,5 +1,7 @@
-import tensorflow as tf
 import math
+
+import tensorflow as tf
+
 import logger
 from network import Model
 
@@ -13,8 +15,10 @@ MIN_VAL = math.inf
 EPOCHS = 100
 BATCHES = 1
 NO_OF_ITERS = int(filenames.get_shape()[0]) // BATCHES
+LOG_DIR = '/tmp'
+SAVE_DIR = '/tmp/macula-iqa.cpkt'
 
-logger.configure('/tmp')
+logger.configure(LOG_DIR)
 sess = tf.Session()
 
 
@@ -76,5 +80,5 @@ for epoch in range(EPOCHS):
 
 	if val_loss < MIN_VAL:
 		MIN_VAL = val_loss
-		saver.save(sess, "/tmp/macula_iqa", )
+		saver.save(sess, SAVE_DIR)
 		print("Savig model")
