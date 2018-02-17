@@ -1,14 +1,14 @@
 import tensorflow as tf
+
 import tf_util as U
 
 
 class Model:
-	def __init__(self, batches, loss = "weighted"):
+	def __init__(self, loss = "weighted"):
 		self.loss = loss
 		self.prob = tf.placeholder(shape = (), dtype = tf.float32)
 		self.lr = tf.placeholder(shape = (), dtype = tf.float32)
-		self.n_images = batches
-		self.n_patches = self.n_images * 64
+		self.n_patches = 64
 		self.output = self.loss_op = self.train_op = None
 
 	@staticmethod
@@ -22,11 +22,7 @@ class Model:
 		return net
 
 	def build(self, image, mos_score):
-		image.set_shape((self.n_images, 64, 32, 32, 3))
-		net = tf.reshape(image, [self.n_patches, 32, 32, 3])
-
-		mos_score.set_shape((self.n_images, ))
-
+		net = tf.reshape(image, [-1, 32, 32, 3])
 		net = self.block(net, 32)
 		net = self.block(net, 64)
 		net = self.block(net, 128)
@@ -39,38 +35,28 @@ class Model:
 		net1 = tf.nn.dropout(net1, keep_prob = self.prob)
 		net1 = U.dense(net1, 1, 'fc2')
 
-		if self.loss == "patchwise":
-			mos_score = tf.tile(mos_score, self.n_patches)
-			self.loss_op = self.patchwise_loss(net1, mos_score)
-			self.output = net1
+		net2 = tf.reshape(net, (-1, 512))
+		net2 = U.dense(net2, 512, 'fc1_weight')
+		net2 = U.swish(net2)
+		net2 = tf.nn.dropout(net2, keep_prob = self.prob)
+		net2 = U.dense(net2, 1, 'fc2_weight')
+		net2 = tf.nn.relu(net2) + 1e-6
 
-		elif self.loss == "weighted":
-			net2 = tf.reshape(net, (-1, 512))
-			net2 = U.dense(net2, 512, 'fc1_weight')
-			net2 = U.swish(net2)
-			net2 = tf.nn.dropout(net2, keep_prob = self.prob)
-			net2 = U.dense(net2, 1, 'fc2_weight')
-			net2 = tf.nn.relu(net2) + 1e-6
-			self.loss_op = self.weighted_loss(net1, net2, mos_score)
+		self.loss_op = self.weighted_loss(net1, net2, mos_score)
 
 		optimizer = tf.train.AdamOptimizer(self.lr)
 		self.train_op = optimizer.minimize(self.loss_op)
 
-	def patchwise_loss(self, h, t):
-		t = U.repeat(t, self.n_patches // self.n_images)
-		return tf.reduce_sum(tf.abs(h - t))
-
 	def weighted_loss(self, h, a, t):
-		loss = 0
 		self.output = 0
-		h = tf.split(h, self.n_images, 0)
-		a = tf.split(a, self.n_images, 0)
-		t = tf.split(t, self.n_images, 0)
 
-		for i in range(self.n_images):
-			y = tf.reduce_sum(h[i] * a[i], 0) / tf.reduce_sum(a[i], 0)
-			self.output += y
-			loss += tf.abs(y - t[i])
+		h = tf.reshape(h, (-1, self.n_patches))
+		a = tf.reshape(a, (-1, self.n_patches))
+		ha = tf.multiply(h, a)
+		ha_sum = tf.reduce_sum(ha, axis = 1)
+		a_sum = tf.reduce_sum(a, axis = 1)
 
-		loss /= self.n_images
+		y = tf.divide(ha_sum, a_sum)
+		diff = tf.abs(y - t)
+		loss = tf.reduce_mean(diff)
 		return loss

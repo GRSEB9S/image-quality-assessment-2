@@ -9,12 +9,12 @@ labels = tf.constant([1], dtype = tf.float32)
 val_filenames = tf.constant(["test_images/lena.jpg"], dtype = tf.string)
 val_labels = tf.constant([1], dtype = tf.float32)
 
-filenames = tf.tile(filenames, [100])
-labels = tf.tile(labels, [100])
+filenames = tf.tile(filenames, [10])
+labels = tf.tile(labels, [10])
 
 MIN_VAL = 999
 EPOCHS = 100
-BATCHES = 20
+BATCHES = 5
 NO_OF_ITERS = int(filenames.get_shape()[0]) // BATCHES
 
 logger.configure('/tmp')
@@ -53,7 +53,7 @@ next_element = iterator.get_next()
 training_init_op = iterator.make_initializer(train_data)
 validation_init_op = iterator.make_initializer(validation_data)
 
-model = Model(BATCHES, 'weighted')
+model = Model('weighted')
 model.build(*next_element)
 
 sess.run(tf.global_variables_initializer())
@@ -64,14 +64,14 @@ for epoch in range(EPOCHS):
 	l_avg = 0
 	for iters in range(NO_OF_ITERS):
 		_, train_loss = sess.run([model.train_op, model.loss_op], feed_dict = {model.lr: 1e-3, model.prob: 0.5})
-		l_avg += train_loss[0]
-		logger.record_tabular('training_loss', train_loss[0])
+		l_avg += train_loss
+		logger.record_tabular('training_loss', train_loss)
 
 	l_avg /= NO_OF_ITERS
 
 	sess.run(validation_init_op)
 	val_loss = sess.run([model.loss_op], feed_dict = {model.prob: 1.0})
-	val_loss = val_loss[0][0]
+	val_loss = val_loss[0]
 	print("Epoch", epoch, "\t Training loss:", l_avg, "\t Validation loss:", val_loss)
 	logger.record_tabular('avg_training_loss', l_avg)
 	logger.record_tabular('validation_loss', val_loss)
