@@ -17,6 +17,8 @@ BATCHES = 1
 NO_OF_ITERS = int(filenames.get_shape()[0]) // BATCHES
 LOG_DIR = '/tmp'
 SAVE_DIR = '/tmp/macula-iqa.cpkt'
+LEARNING_RATE = 1e-3
+DROPOUT_PROB = 0.5
 
 logger.configure(LOG_DIR)
 sess = tf.Session()
@@ -60,18 +62,21 @@ model.build(*next_element)
 sess.run(tf.global_variables_initializer())
 saver = tf.train.Saver()
 
+training_feed = {model.lr: LEARNING_RATE, model.prob: DROPOUT_PROB}
+testing_feed = {model.prob: DROPOUT_PROB}
+
 for epoch in range(EPOCHS):
 	sess.run(training_init_op)
 	l_avg = 0
 	for iters in range(NO_OF_ITERS):
-		_, train_loss = sess.run([model.train_op, model.loss_op], feed_dict = {model.lr: 1e-3, model.prob: 0.5})
+		_, train_loss = sess.run([model.train_op, model.loss_op], feed_dict = training_feed)
 		l_avg += train_loss
 		logger.record_tabular('training_loss', train_loss)
 
 	l_avg /= NO_OF_ITERS
 
 	sess.run(validation_init_op)
-	val_loss = sess.run([model.loss_op], feed_dict = {model.prob: 1.0})
+	val_loss = sess.run([model.loss_op], feed_dict = testing_feed)
 	val_loss = val_loss[0]
 	print("Epoch", epoch, "\t Training loss:", l_avg, "\t Validation loss:", val_loss)
 	logger.record_tabular('avg_training_loss', l_avg)
