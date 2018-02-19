@@ -3,13 +3,16 @@ import math
 import tensorflow as tf
 
 import logger
+from load_data import read_data
 from network import Model
 
-filenames = tf.constant(["test_images/macula.jpg"], dtype = tf.string)
-labels = tf.constant([1], dtype = tf.float32)
+train_files, train_labels, val_files, val_labels = read_data(no_of_train = 275)
 
-val_filenames = tf.constant(["test_images/lena.jpg"], dtype = tf.string)
-val_labels = tf.constant([1], dtype = tf.float32)
+filenames = tf.constant(train_files, dtype = tf.string)
+labels = tf.constant(train_labels, dtype = tf.float32)
+
+val_filenames = tf.constant(val_files, dtype = tf.string)
+val_labels = tf.constant(val_labels, dtype = tf.float32)
 
 MIN_VAL = math.inf
 EPOCHS = 100
