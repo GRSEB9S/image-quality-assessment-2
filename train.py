@@ -89,4 +89,4 @@ for epoch in range(EPOCHS):
 	if val_loss < MIN_VAL:
 		MIN_VAL = val_loss
 		saver.save(sess, SAVE_DIR)
-		print("Savig model")
+		print("Saving model")
