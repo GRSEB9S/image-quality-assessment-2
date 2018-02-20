@@ -2,7 +2,6 @@ import math
 
 import tensorflow as tf
 
-import logger
 from load_data import read_data
 from network import Model
 
@@ -23,7 +22,6 @@ SAVE_DIR = '/tmp/macula-iqa.cpkt'
 LEARNING_RATE = 1e-3
 DROPOUT_PROB = 0.5
 
-logger.configure(LOG_DIR)
 sess = tf.Session()
 
 
@@ -74,7 +72,6 @@ for epoch in range(EPOCHS):
 	for iters in range(NO_OF_ITERS):
 		_, train_loss = sess.run([model.train_op, model.loss_op], feed_dict = training_feed)
 		l_avg += train_loss
-		logger.record_tabular('training_loss', train_loss)
 
 	l_avg /= NO_OF_ITERS
 
@@ -82,9 +79,6 @@ for epoch in range(EPOCHS):
 	val_loss = sess.run([model.loss_op], feed_dict = testing_feed)
 	val_loss = val_loss[0]
 	print("Epoch", epoch, "\t Training loss:", l_avg, "\t Validation loss:", val_loss)
-	logger.record_tabular('avg_training_loss', l_avg)
-	logger.record_tabular('validation_loss', val_loss)
-	logger.dump_tabular()
 
 	if val_loss < MIN_VAL:
 		MIN_VAL = val_loss
